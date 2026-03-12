@@ -1,0 +1,306 @@
+import { useState } from 'react'
+import { motion } from 'framer-motion'
+import { AnimatePresence } from 'framer-motion'
+import {
+  Activity, Calendar, Shield, Zap, MessageCircle, BarChart3,
+  CheckCircle, ArrowRight, Play, Star, Clock, Users, TrendingUp
+} from 'lucide-react'
+import { useApp } from '../hooks/useApp'
+import { t } from '../i18n/translations'
+import BookingForm from '../components/BookingForm'
+import DemoLogin from '../components/DemoLogin'
+import Chatbot from '../components/Chatbot'
+
+const FEATURES = [
+  {
+    icon: Shield,
+    title: 'Zero Double-Bookings',
+    desc: 'Intelligent clash detection checks every slot in real-time. Suggests the next 3 available times automatically.',
+    color: 'text-mint',
+    bg: 'bg-mint/10',
+  },
+  {
+    icon: MessageCircle,
+    title: 'WhatsApp Confirmations',
+    desc: 'Patients get instant WhatsApp messages when appointments are confirmed, rescheduled, or cancelled.',
+    color: 'text-teal',
+    bg: 'bg-teal/10',
+  },
+  {
+    icon: Zap,
+    title: 'AI Triage',
+    desc: 'BrainBot detects urgent symptoms like chest pain and automatically prioritizes those appointments.',
+    color: 'text-coral',
+    bg: 'bg-coral/10',
+  },
+  {
+    icon: BarChart3,
+    title: 'Smart Analytics',
+    desc: 'Peak hour charts, daily counts, no-show rates — all in a beautiful real-time dashboard.',
+    color: 'text-lavender',
+    bg: 'bg-lavender/10',
+  },
+  {
+    icon: Calendar,
+    title: 'Live Queue Board',
+    desc: 'A TV-optimized public screen showing current patient, next up, and estimated wait time.',
+    color: 'text-amber',
+    bg: 'bg-amber/10',
+  },
+  {
+    icon: Users,
+    title: 'Role-Based Access',
+    desc: 'Separate dashboards for doctors and receptionists with exactly the controls each role needs.',
+    color: 'text-sage',
+    bg: 'bg-sage/10',
+  },
+]
+
+const STATS = [
+  { label: 'Avg. time saved per day', value: '3.5hrs', icon: Clock },
+  { label: 'Booking conflicts prevented', value: '100%', icon: Shield },
+  { label: 'Patient satisfaction', value: '4.9★', icon: Star },
+  { label: 'Appointments managed', value: '10k+', icon: TrendingUp },
+]
+
+function fadeUp(delay = 0) {
+  return {
+    initial: { opacity: 0, y: 24 },
+    whileInView: { opacity: 1, y: 0 },
+    viewport: { once: true, margin: '-80px' },
+    transition: { duration: 0.5, delay, ease: 'easeOut' },
+  }
+}
+
+export default function Home() {
+  const { lang } = useApp()
+  const [bookingOpen, setBookingOpen] = useState(false)
+  const [demoOpen, setDemoOpen] = useState(false)
+
+  return (
+    <div className="pt-16">
+      {/* ── Hero ─────────────────────────────────────────────────────────── */}
+      <section className="relative min-h-screen flex items-center overflow-hidden mesh-bg">
+        {/* Background blobs */}
+        <div className="absolute top-20 right-[-10%] w-[500px] h-[500px] rounded-full bg-gradient-to-br from-teal/15 to-mint/8 blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-[-5%] w-[400px] h-[400px] rounded-full bg-gradient-to-tr from-amber/8 to-transparent blur-3xl pointer-events-none" />
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 grid lg:grid-cols-2 gap-16 items-center">
+          {/* Left: Copy */}
+          <div>
+            <motion.div {...fadeUp(0)}>
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-teal/10 border border-teal/20 text-teal text-xs font-semibold mb-6">
+                <span className="w-1.5 h-1.5 rounded-full bg-teal animate-pulse" />
+                TechBlitz26 · Team Parallax
+              </div>
+            </motion.div>
+
+            <motion.h1
+              {...fadeUp(0.05)}
+              className="font-serif text-5xl sm:text-6xl lg:text-7xl leading-[1.05] text-obsidian dark:text-ivory mb-6"
+            >
+              Your Clinic,<br />
+              <span className="text-teal italic">Running Itself.</span>
+            </motion.h1>
+
+            <motion.p {...fadeUp(0.1)} className="text-slate text-lg leading-relaxed max-w-xl mb-8">
+              Zero double-bookings. Instant WhatsApp confirmations. AI triage that catches emergencies.
+              The single platform every clinic needs — <strong className="text-obsidian dark:text-ivory">no training required.</strong>
+            </motion.p>
+
+            <motion.div {...fadeUp(0.15)} className="flex flex-wrap gap-3">
+              <button onClick={() => setBookingOpen(true)} className="btn-primary text-base px-7 py-3.5">
+                <Calendar className="w-5 h-5" />
+                {t(lang, 'book_now')}
+              </button>
+              <button onClick={() => setDemoOpen(true)} className="btn-secondary text-base px-7 py-3.5">
+                <Play className="w-5 h-5" />
+                {t(lang, 'demo_login')}
+              </button>
+            </motion.div>
+
+            <motion.div {...fadeUp(0.2)} className="flex flex-wrap gap-6 mt-10">
+              {STATS.map(({ label, value, icon: Icon }) => (
+                <div key={label} className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-mist flex items-center justify-center">
+                    <Icon className="w-4 h-4 text-teal" />
+                  </div>
+                  <div>
+                    <div className="font-serif text-xl text-obsidian dark:text-ivory leading-none">{value}</div>
+                    <div className="text-xs text-slate mt-0.5">{label}</div>
+                  </div>
+                </div>
+              ))}
+            </motion.div>
+          </div>
+
+          {/* Right: Dashboard Preview Card */}
+          <motion.div
+            initial={{ opacity: 0, x: 40 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.2, ease: 'easeOut' }}
+            className="hidden lg:block"
+          >
+            <div className="relative">
+              {/* Floating badges */}
+              <motion.div
+                animate={{ y: [0, -8, 0] }}
+                transition={{ repeat: Infinity, duration: 4, ease: 'easeInOut' }}
+                className="absolute -top-4 -left-4 z-10 card px-4 py-3 flex items-center gap-2.5"
+              >
+                <div className="w-2 h-2 rounded-full bg-mint animate-pulse" />
+                <span className="text-xs font-semibold text-obsidian dark:text-ivory">3 appointments today</span>
+              </motion.div>
+
+              <motion.div
+                animate={{ y: [0, 8, 0] }}
+                transition={{ repeat: Infinity, duration: 3.5, ease: 'easeInOut', delay: 1 }}
+                className="absolute -bottom-4 -right-4 z-10 card px-4 py-3"
+              >
+                <div className="chip chip-urgent text-[10px]">🚨 URGENT</div>
+                <p className="text-xs text-slate mt-1">Chest pain · Dr. Kapoor</p>
+              </motion.div>
+
+              {/* Main card */}
+              <div className="card p-6 rounded-3xl">
+                <div className="flex items-center justify-between mb-5">
+                  <div>
+                    <p className="text-xs text-slate uppercase tracking-wider font-semibold">Today's Schedule</p>
+                    <p className="font-serif text-xl text-obsidian dark:text-ivory mt-0.5">Dr. Ananya Mehta</p>
+                  </div>
+                  <div className="w-10 h-10 rounded-xl gradient-teal flex items-center justify-center">
+                    <Activity className="w-5 h-5 text-white" />
+                  </div>
+                </div>
+
+                <div className="space-y-2.5">
+                  {[
+                    { name: 'Priya Sharma', time: '09:30', status: 'confirmed', chip: 'chip-confirmed' },
+                    { name: 'Rahul Verma', time: '10:00', status: 'urgent', chip: 'chip-urgent' },
+                    { name: 'Sunita Patel', time: '10:30', status: 'pending', chip: 'chip-pending' },
+                    { name: 'Amit Kumar', time: '11:00', status: 'confirmed', chip: 'chip-confirmed' },
+                  ].map((appt, i) => (
+                    <motion.div
+                      key={appt.name}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.4 + i * 0.08 }}
+                      className="flex items-center justify-between p-3 rounded-xl bg-mist/50 dark:bg-slate/10"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-full bg-teal/20 flex items-center justify-center text-xs font-bold text-teal">
+                          {appt.name[0]}
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold text-obsidian dark:text-ivory">{appt.name}</p>
+                          <p className="text-[10px] text-slate">{appt.time} AM</p>
+                        </div>
+                      </div>
+                      <span className={`chip ${appt.chip} text-[10px]`}>{appt.status}</span>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ── Features ──────────────────────────────────────────────────────── */}
+      <section className="py-24 bg-ivory/50 dark:bg-obsidian/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div {...fadeUp()} className="text-center mb-16">
+            <p className="text-teal text-sm font-semibold uppercase tracking-widest mb-3">Everything You Need</p>
+            <h2 className="font-serif text-4xl sm:text-5xl text-obsidian dark:text-ivory">
+              Built for real clinics
+            </h2>
+            <p className="text-slate text-lg mt-4 max-w-xl mx-auto">
+              Not a generic booking template. ClinicBrain is purpose-built for doctor's offices that need reliability.
+            </p>
+          </motion.div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {FEATURES.map((f, i) => {
+              const Icon = f.icon
+              return (
+                <motion.div key={f.title} {...fadeUp(i * 0.06)}>
+                  <div className="card p-6 h-full group hover:border-teal/30 transition-all duration-300">
+                    <div className={`w-12 h-12 rounded-2xl ${f.bg} flex items-center justify-center mb-4 group-hover:scale-105 transition-transform`}>
+                      <Icon className={`w-6 h-6 ${f.color}`} />
+                    </div>
+                    <h3 className="font-serif text-lg text-obsidian dark:text-ivory mb-2">{f.title}</h3>
+                    <p className="text-slate text-sm leading-relaxed">{f.desc}</p>
+                  </div>
+                </motion.div>
+              )
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ── How it works ─────────────────────────────────────────────────── */}
+      <section className="py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div {...fadeUp()} className="text-center mb-16">
+            <p className="text-teal text-sm font-semibold uppercase tracking-widest mb-3">The Flow</p>
+            <h2 className="font-serif text-4xl sm:text-5xl text-obsidian dark:text-ivory">How booking works</h2>
+          </motion.div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            {[
+              { step: '01', title: 'Enter Details', desc: 'Name and phone number', icon: '👤' },
+              { step: '02', title: 'Describe Symptoms', desc: 'AI checks for urgency', icon: '🩺' },
+              { step: '03', title: 'Extra Details', desc: 'Choose doctor & date', icon: '📋' },
+              { step: '04', title: 'Pick Time', desc: 'Smart slot suggestion', icon: '🕐' },
+              { step: '05', title: 'Confirmed!', desc: 'WhatsApp sent instantly', icon: '✅' },
+            ].map((s, i) => (
+              <motion.div key={s.step} {...fadeUp(i * 0.07)} className="text-center">
+                <div className="relative">
+                  <div className="w-14 h-14 rounded-2xl gradient-teal flex items-center justify-center text-2xl mx-auto mb-3">
+                    {s.icon}
+                  </div>
+                  {i < 4 && <ArrowRight className="hidden lg:block absolute top-5 -right-4 w-4 h-4 text-mist" />}
+                </div>
+                <p className="text-teal text-xs font-bold uppercase tracking-wider mb-1">{s.step}</p>
+                <p className="font-semibold text-sm text-obsidian dark:text-ivory">{s.title}</p>
+                <p className="text-xs text-slate mt-0.5">{s.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── CTA Banner ───────────────────────────────────────────────────── */}
+      <section className="py-20 gradient-teal">
+        <div className="max-w-4xl mx-auto px-4 text-center">
+          <motion.div {...fadeUp()}>
+            <h2 className="font-serif text-4xl sm:text-5xl text-white mb-4">
+              Ready to streamline your clinic?
+            </h2>
+            <p className="text-white/80 text-lg mb-8">
+              Book your first appointment in under 60 seconds. No setup required.
+            </p>
+            <div className="flex flex-wrap justify-center gap-3">
+              <button onClick={() => setBookingOpen(true)} className="bg-white text-teal px-8 py-3.5 rounded-xl font-semibold hover:bg-ivory transition-colors flex items-center gap-2">
+                <Calendar className="w-5 h-5" />
+                Book Appointment
+              </button>
+              <button onClick={() => setDemoOpen(true)} className="border border-white/30 text-white px-8 py-3.5 rounded-xl font-semibold hover:bg-white/10 transition-colors flex items-center gap-2">
+                <Play className="w-5 h-5" />
+                Try Demo
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Modals */}
+      <AnimatePresence>
+        {bookingOpen && <BookingForm key="booking" onClose={() => setBookingOpen(false)} />}
+        {demoOpen && <DemoLogin key="demo" onClose={() => setDemoOpen(false)} />}
+      </AnimatePresence>
+
+      <Chatbot onOpenBooking={() => setBookingOpen(true)} />
+    </div>
+  )
+}
