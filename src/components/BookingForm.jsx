@@ -3,16 +3,10 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { User, Phone, Heart, MapPin, Calendar, Clock, CheckCircle, AlertTriangle, ChevronRight, Loader2, X, MessageCircle } from 'lucide-react'
 import { useApp } from '../hooks/useApp'
 import { t } from '../i18n/translations'
-import { DOCTORS, detectUrgency, generateTimeSlots } from '../services/supabase'
+import { DOCTORS_DATA, detectUrgency, generateTimeSlots } from '../services/supabase'
 import { addAppointment, getAppointments } from '../services/store'
 
 const STEPS = 5
-const SLIDE = {
-  initial: { opacity: 0, x: 40 },
-  animate: { opacity: 1, x: 0 },
-  exit: { opacity: 0, x: -40 },
-  transition: { duration: 0.25, ease: 'easeOut' },
-}
 
 function ProgressDots({ step }) {
   return (
@@ -24,36 +18,76 @@ function ProgressDots({ step }) {
   )
 }
 
+const SLIDE = {
+  initial: { opacity: 0, x: 40 },
+  animate: { opacity: 1, x: 0 },
+  exit: { opacity: 0, x: -40 },
+  transition: { duration: 0.25, ease: 'easeOut' },
+}
+
+const CHOOSE_DOCTOR = { en: 'Choose Doctor', hi: 'डॉक्टर चुनें', mr: 'डॉक्टर निवडा' }
+const DATE_LABEL = { en: 'Date', hi: 'तारीख', mr: 'तारीख' }
+const SELECT_TIME = { en: 'Select Time Slot', hi: 'समय चुनें', mr: 'वेळ निवडा' }
+const SELECTED_LABEL = { en: 'Selected', hi: 'चुना गया', mr: 'निवडले' }
+const BOOKING_MSG = { en: 'Booking...', hi: 'बुक हो रहा है...', mr: 'बुक होत आहे...' }
+const WHATSAPP_MSG = { en: 'WhatsApp confirmation sent to', hi: 'व्हाट्सएप पुष्टि भेजी गई', mr: 'व्हॉट्सॲप पुष्टी पाठवली' }
+const REALTIME_MSG = { en: 'Your appointment is visible to the doctor and receptionist in real-time.', hi: 'आपकी अपॉइंटमेंट डॉक्टर और रिसेप्शनिस्ट को रीयल-टाइम में दिखती है।', mr: 'तुमची अपॉइंटमेंट डॉक्टर आणि रिसेप्शनिस्टला रिअल-टाइममध्ये दिसते.' }
+const SLOT_TAKEN_MSG = { en: 'already booked', hi: 'पहले से बुक', mr: 'आधीच बुक' }
+const NO_SLOTS_MSG = { en: 'All slots booked for this doctor on this date!', hi: 'इस डॉक्टर के सभी स्लॉट बुक हो गए हैं!', mr: 'या डॉक्टरचे सर्व स्लॉट बुक झाले आहेत!' }
+const DONE_LABEL = { en: 'Done', hi: 'हो गया', mr: 'झाले' }
+const URGENT_MSG = { en: 'Your symptoms may require urgent attention! We will prioritize your appointment.', hi: 'आपके लक्षणों पर तत्काल ध्यान देना जरूरी है! आपकी अपॉइंटमेंट को प्राथमिकता दी जाएगी।', mr: 'तुमच्या लक्षणांकडे तातडीने लक्ष देणे आवश्यक आहे! तुमच्या अपॉइंटमेंटला प्राधान्य दिले जाईल.' }
+
 export default function BookingForm({ onClose }) {
   const { lang } = useApp()
   const [step, setStep] = useState(0)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [altSlots, setAltSlots] = useState([])
   const [confirmation, setConfirmation] = useState(null)
 
   const [form, setForm] = useState({
-    name: '', phone: '',
+    name: '',
+    phone: '',
     symptoms: '',
     address: '',
-    doctor: DOCTORS[0].name,
+    doctor: DOCTORS_DATA[0].name,
     date: new Date().toISOString().split('T')[0],
     timeSlot: '',
   })
 
   const urgent = detectUrgency(form.symptoms)
-  const slots = generateTimeSlots('09:00', '17:00', 15)
+  const allSlots = generateTimeSlots('09:00', '17:00', 15)
+
+  // Get booked slots for selected doctor+date
+  const bookedSlots = getAppointments()
+    .filter(a =>
+      a.doctor_name === form.doctor &&
+      a.date === form.date &&
+      a.status !== 'cancelled'
+    )
+    .map(a => a.time_slot)
+
+  // Only show available slots
+  const availableSlots = allSlots.filter(s => !bookedSlots.includes(s))
 
   const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }))
 
+  // Phone: only allow numbers, +, spaces
+  const handlePhone = (e) => {
+    const val = e.target.value.replace(/[^0-9+\s\-]/g, '')
+    setForm(f => ({ ...f, phone: val }))
+  }
+
   const next = () => {
     setError('')
-    if (step === 0 && (!form.name.trim() || !form.phone.trim())) {
-      setError('Please fill in your name and phone number.')
-      return
+    if (step === 0) {
+      if (!form.name.trim()) { setError(lang === 'hi' ? 'कृपया नाम दर्ज करें' : lang === 'mr' ? 'कृपया नाव टाका' : 'Please enter your name.'); return }
+      if (!form.phone.trim() || form.phone.replace(/\D/g, '').length < 10) {
+        setError(lang === 'hi' ? 'कृपया सही फोन नंबर दर्ज करें (10 अंक)' : lang === 'mr' ? 'कृपया योग्य फोन नंबर टाका (10 अंक)' : 'Please enter a valid 10-digit phone number.')
+        return
+      }
     }
     if (step === 1 && !form.symptoms.trim()) {
-      setError('Please describe your symptoms.')
+      setError(lang === 'hi' ? 'कृपया लक्षण बताएं' : lang === 'mr' ? 'कृपया लक्षणे सांगा' : 'Please describe your symptoms.')
       return
     }
     setStep(s => s + 1)
@@ -61,35 +95,11 @@ export default function BookingForm({ onClose }) {
 
   const back = () => { setStep(s => s - 1); setError('') }
 
-  const handleSlotSelect = (slot) => {
-    setError('')
-    setAltSlots([])
-    // Check if slot already taken in store
-    const existing = getAppointments()
-    const taken = existing.find(a =>
-      a.doctor_name === form.doctor &&
-      a.date === form.date &&
-      a.time_slot === slot &&
-      a.status !== 'cancelled'
-    )
-    if (taken) {
-      // Find next 3 free slots
-      const allSlots = generateTimeSlots('09:00', '17:00', 15)
-      const idx = allSlots.indexOf(slot)
-      const after = [...allSlots.slice(idx + 1), ...allSlots.slice(0, idx)]
-      const free = after.filter(s => !existing.find(a =>
-        a.doctor_name === form.doctor && a.date === form.date &&
-        a.time_slot === s && a.status !== 'cancelled'
-      )).slice(0, 3)
-      setAltSlots(free)
-      setForm(f => ({ ...f, timeSlot: '' }))
-    } else {
-      setForm(f => ({ ...f, timeSlot: slot }))
-    }
-  }
-
   const handleConfirm = async () => {
-    if (!form.timeSlot) { setError('Please select a time slot.'); return }
+    if (!form.timeSlot) {
+      setError(lang === 'hi' ? 'कृपया समय चुनें' : lang === 'mr' ? 'कृपया वेळ निवडा' : 'Please select a time slot.')
+      return
+    }
     setLoading(true)
     await new Promise(r => setTimeout(r, 800))
     const newAppt = addAppointment({
@@ -111,12 +121,9 @@ export default function BookingForm({ onClose }) {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4"
-      style={{ background: 'rgba(15,25,35,0.6)', backdropFilter: 'blur(6px)' }}
-    >
+      style={{ background: 'rgba(15,25,35,0.6)', backdropFilter: 'blur(6px)' }}>
       <motion.div
-        initial={{ opacity: 0, y: 60 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 60 }}
+        initial={{ opacity: 0, y: 60 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 60 }}
         transition={{ type: 'spring', stiffness: 300, damping: 28 }}
         className="w-full max-w-md bg-warm-white dark:bg-obsidian rounded-3xl shadow-2xl overflow-hidden"
       >
@@ -145,25 +152,38 @@ export default function BookingForm({ onClose }) {
           <ProgressDots step={step} />
 
           <AnimatePresence mode="wait">
-            {/* Step 0 */}
+
+            {/* Step 0: Name + Phone */}
             {step === 0 && (
               <motion.div key="s0" {...SLIDE} className="space-y-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate uppercase tracking-wider mb-1.5">
                     <User className="inline w-3 h-3 mr-1" />{t(lang, 'name_label')}
                   </label>
-                  <input className="input" placeholder="Priya Sharma" value={form.name} onChange={set('name')} />
+                  <input className="input" placeholder={lang === 'hi' ? 'प्रिया शर्मा' : lang === 'mr' ? 'प्रिया शर्मा' : 'Priya Sharma'}
+                    value={form.name} onChange={set('name')} />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate uppercase tracking-wider mb-1.5">
                     <Phone className="inline w-3 h-3 mr-1" />{t(lang, 'phone_label')}
                   </label>
-                  <input className="input" placeholder="+91 98765 43210" value={form.phone} onChange={set('phone')} type="tel" />
+                  <input
+                    className="input"
+                    placeholder="+91 98765 43210"
+                    value={form.phone}
+                    onChange={handlePhone}
+                    type="tel"
+                    inputMode="numeric"
+                    maxLength={15}
+                  />
+                  <p className="text-xs text-slate mt-1">
+                    {lang === 'hi' ? '📱 केवल नंबर दर्ज करें' : lang === 'mr' ? '📱 फक्त नंबर टाका' : '📱 Numbers only'}
+                  </p>
                 </div>
               </motion.div>
             )}
 
-            {/* Step 1 */}
+            {/* Step 1: Symptoms */}
             {step === 1 && (
               <motion.div key="s1" {...SLIDE} className="space-y-4">
                 <div>
@@ -171,22 +191,20 @@ export default function BookingForm({ onClose }) {
                     <Heart className="inline w-3 h-3 mr-1" />{t(lang, 'symptoms_label')}
                   </label>
                   <textarea className="input resize-none" rows={4}
-                    placeholder="e.g. Mild headache and fever since yesterday..."
+                    placeholder={lang === 'hi' ? 'जैसे: कल से हल्का बुखार और सिरदर्द...' : lang === 'mr' ? 'उदा. काल पासून हलका ताप आणि डोकेदुखी...' : 'e.g. Mild headache and fever since yesterday...'}
                     value={form.symptoms} onChange={set('symptoms')} />
                 </div>
                 {urgent && (
                   <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
                     className="flex items-start gap-2.5 p-3.5 rounded-xl bg-coral/10 border border-coral/30">
                     <AlertTriangle className="w-4 h-4 text-coral mt-0.5 flex-shrink-0" />
-                    <p className="text-xs text-coral font-medium leading-relaxed">
-                      Your symptoms may require urgent attention. We'll prioritize your appointment!
-                    </p>
+                    <p className="text-xs text-coral font-medium leading-relaxed">{URGENT_MSG[lang] || URGENT_MSG.en}</p>
                   </motion.div>
                 )}
               </motion.div>
             )}
 
-            {/* Step 2 */}
+            {/* Step 2: Doctor + Date */}
             {step === 2 && (
               <motion.div key="s2" {...SLIDE} className="space-y-4">
                 {urgent && (
@@ -194,77 +212,88 @@ export default function BookingForm({ onClose }) {
                     <label className="block text-xs font-semibold text-slate uppercase tracking-wider mb-1.5">
                       <MapPin className="inline w-3 h-3 mr-1" />{t(lang, 'address_label')}
                     </label>
-                    <textarea className="input resize-none" rows={2} placeholder="123 MG Road..." value={form.address} onChange={set('address')} />
+                    <textarea className="input resize-none" rows={2}
+                      placeholder={lang === 'hi' ? '123 एमजी रोड, पुणे...' : lang === 'mr' ? '123 एमजी रोड, पुणे...' : '123 MG Road, Pune...'}
+                      value={form.address} onChange={set('address')} />
                   </div>
                 )}
                 <div>
-                  <label className="block text-xs font-semibold text-slate uppercase tracking-wider mb-1.5">Choose Doctor</label>
-                  <div className="grid gap-2">
-                    {DOCTORS.map(doc => (
-                      <button key={doc.name} onClick={() => setForm(f => ({ ...f, doctor: doc.name }))}
+                  <label className="block text-xs font-semibold text-slate uppercase tracking-wider mb-1.5">
+                    {CHOOSE_DOCTOR[lang] || CHOOSE_DOCTOR.en}
+                  </label>
+                  <div className="grid gap-2 max-h-52 overflow-y-auto pr-1">
+                    {DOCTORS_DATA.map(doc => (
+                      <button key={doc.name}
+                        onClick={() => setForm(f => ({ ...f, doctor: doc.name, timeSlot: '' }))}
                         className={`flex items-center gap-3 p-3 rounded-xl border transition-all text-left
                           ${form.doctor === doc.name ? 'border-teal bg-teal/5' : 'border-mist hover:border-teal/40'}`}>
                         <span className="text-xl">{doc.avatar}</span>
                         <div>
                           <div className="text-sm font-semibold text-obsidian dark:text-ivory">{doc.name}</div>
-                          <div className="text-xs text-slate">{doc.specialty}</div>
+                          <div className="text-xs text-slate">{doc.specialty[lang] || doc.specialty.en}</div>
                         </div>
-                        {form.doctor === doc.name && <CheckCircle className="w-4 h-4 text-teal ml-auto" />}
+                        {form.doctor === doc.name && <CheckCircle className="w-4 h-4 text-teal ml-auto flex-shrink-0" />}
                       </button>
                     ))}
                   </div>
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate uppercase tracking-wider mb-1.5">
-                    <Calendar className="inline w-3 h-3 mr-1" />Date
+                    <Calendar className="inline w-3 h-3 mr-1" />{DATE_LABEL[lang] || DATE_LABEL.en}
                   </label>
                   <input type="date" className="input" value={form.date}
-                    min={new Date().toISOString().split('T')[0]} onChange={set('date')} />
+                    min={new Date().toISOString().split('T')[0]}
+                    onChange={e => setForm(f => ({ ...f, date: e.target.value, timeSlot: '' }))} />
                 </div>
               </motion.div>
             )}
 
-            {/* Step 3 */}
+            {/* Step 3: Time Slot — only show AVAILABLE slots */}
             {step === 3 && (
               <motion.div key="s3" {...SLIDE} className="space-y-3">
-                {altSlots.length > 0 && (
-                  <div className="p-3 rounded-xl bg-amber/10 border border-amber/30 text-xs text-amber font-medium">
-                    ⚠ {t(lang, 'slot_taken')}
-                    <div className="flex gap-2 mt-2 flex-wrap">
-                      {altSlots.map(s => (
-                        <button key={s} onClick={() => { setForm(f => ({ ...f, timeSlot: s })); setAltSlots([]) }}
-                          className="px-3 py-1.5 rounded-lg bg-teal text-white text-xs font-semibold hover:bg-deep-teal transition-colors">
-                          {s}
+                <label className="block text-xs font-semibold text-slate uppercase tracking-wider">
+                  <Clock className="inline w-3 h-3 mr-1" />{SELECT_TIME[lang] || SELECT_TIME.en}
+                </label>
+
+                {availableSlots.length === 0 ? (
+                  <div className="text-center py-8 text-coral">
+                    <Clock className="w-10 h-10 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm font-medium">{NO_SLOTS_MSG[lang] || NO_SLOTS_MSG.en}</p>
+                    <button onClick={back} className="btn-secondary mt-3 text-xs">
+                      {lang === 'hi' ? 'दूसरी तारीख चुनें' : lang === 'mr' ? 'दुसरी तारीख निवडा' : 'Choose another date'}
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-4 gap-2 max-h-52 overflow-y-auto pr-1">
+                      {availableSlots.map(slot => (
+                        <button key={slot} onClick={() => setForm(f => ({ ...f, timeSlot: slot }))}
+                          className={`py-2 px-1 rounded-xl text-xs font-medium border transition-all
+                            ${form.timeSlot === slot
+                              ? 'bg-teal text-white border-teal shadow-teal'
+                              : 'border-mist hover:border-teal/40 text-slate hover:text-teal'}`}>
+                          {slot}
                         </button>
                       ))}
                     </div>
-                  </div>
-                )}
-                <label className="block text-xs font-semibold text-slate uppercase tracking-wider">
-                  <Clock className="inline w-3 h-3 mr-1" />Select Time
-                </label>
-                <div className="grid grid-cols-4 gap-2 max-h-52 overflow-y-auto pr-1">
-                  {slots.map(slot => (
-                    <button key={slot} onClick={() => handleSlotSelect(slot)}
-                      className={`py-2 px-1 rounded-xl text-xs font-medium border transition-all
-                        ${form.timeSlot === slot
-                          ? 'bg-teal text-white border-teal shadow-teal'
-                          : 'border-mist hover:border-teal/40 text-slate hover:text-teal'}`}>
-                      {slot}
-                    </button>
-                  ))}
-                </div>
-                {form.timeSlot && (
-                  <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
-                    className="p-4 rounded-xl bg-teal/5 border border-teal/20">
-                    <p className="font-semibold text-teal text-sm">✓ Selected: {form.timeSlot}</p>
-                    <p className="text-xs text-slate mt-0.5">{form.doctor} · {form.date}</p>
-                  </motion.div>
+                    {bookedSlots.length > 0 && (
+                      <p className="text-[10px] text-slate/60 text-center">
+                        {bookedSlots.length} {SLOT_TAKEN_MSG[lang] || SLOT_TAKEN_MSG.en} • {availableSlots.length} {lang === 'hi' ? 'उपलब्ध' : lang === 'mr' ? 'उपलब्ध' : 'available'}
+                      </p>
+                    )}
+                    {form.timeSlot && (
+                      <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
+                        className="p-4 rounded-xl bg-teal/5 border border-teal/20">
+                        <p className="font-semibold text-teal text-sm">✓ {SELECTED_LABEL[lang]}: {form.timeSlot}</p>
+                        <p className="text-xs text-slate mt-0.5">{form.doctor} · {form.date}</p>
+                      </motion.div>
+                    )}
+                  </>
                 )}
               </motion.div>
             )}
 
-            {/* Step 4 - Confirmation */}
+            {/* Step 4: Confirmation */}
             {step === 4 && confirmation && (
               <motion.div key="s4" {...SLIDE} className="text-center">
                 <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}
@@ -275,15 +304,15 @@ export default function BookingForm({ onClose }) {
                 <h3 className="font-serif text-xl text-obsidian dark:text-ivory mb-1">{t(lang, 'book_confirmed')}</h3>
                 <p className="text-sm text-slate mb-2 flex items-center justify-center gap-1">
                   <MessageCircle className="w-3.5 h-3.5 text-mint" />
-                  {t(lang, 'whatsapp_sent')} {confirmation.phone}
+                  {WHATSAPP_MSG[lang]} {confirmation.phone}
                 </p>
-                <div className="text-left space-y-2.5 p-4 rounded-2xl bg-mist/60 dark:bg-slate/10 mb-5">
+                <div className="text-left space-y-2.5 p-4 rounded-2xl bg-mist/60 dark:bg-slate/10 mb-4">
                   {[
-                    ['Patient', confirmation.patient_name],
-                    ['Doctor', confirmation.doctor_name],
-                    ['Date', confirmation.date],
-                    ['Time', confirmation.time_slot],
-                    ['Status', confirmation.urgent ? '🚨 URGENT — Priority' : '⏳ Pending Confirmation'],
+                    [lang === 'hi' ? 'मरीज' : lang === 'mr' ? 'रुग्ण' : 'Patient', confirmation.patient_name],
+                    [lang === 'hi' ? 'डॉक्टर' : 'Doctor', confirmation.doctor_name],
+                    [lang === 'hi' ? 'तारीख' : lang === 'mr' ? 'तारीख' : 'Date', confirmation.date],
+                    [lang === 'hi' ? 'समय' : lang === 'mr' ? 'वेळ' : 'Time', confirmation.time_slot],
+                    [lang === 'hi' ? 'स्थिति' : lang === 'mr' ? 'स्थिती' : 'Status', confirmation.urgent ? '🚨 ' + (lang === 'hi' ? 'आपातकाल' : lang === 'mr' ? 'तातडीचे' : 'URGENT') : '⏳ ' + (lang === 'hi' ? 'पुष्टि प्रतीक्षित' : lang === 'mr' ? 'पुष्टीची प्रतीक्षा' : 'Pending')],
                   ].map(([label, val]) => (
                     <div key={label} className="flex justify-between text-sm">
                       <span className="text-slate font-medium">{label}</span>
@@ -291,8 +320,10 @@ export default function BookingForm({ onClose }) {
                     </div>
                   ))}
                 </div>
-                <p className="text-xs text-slate mb-4">Your appointment is visible to the doctor and receptionist dashboard in real-time.</p>
-                <button onClick={onClose} className="btn-primary w-full justify-center">Done</button>
+                <p className="text-xs text-slate mb-4">{REALTIME_MSG[lang] || REALTIME_MSG.en}</p>
+                <button onClick={onClose} className="btn-primary w-full justify-center">
+                  {DONE_LABEL[lang] || DONE_LABEL.en}
+                </button>
               </motion.div>
             )}
           </AnimatePresence>
@@ -312,10 +343,10 @@ export default function BookingForm({ onClose }) {
                   {t(lang, 'next')} <ChevronRight className="w-4 h-4" />
                 </button>
               )}
-              {step === 3 && (
-                <button onClick={handleConfirm} disabled={loading || !form.timeSlot} className="btn-primary flex-1 justify-center">
-                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
-                  {loading ? 'Booking...' : t(lang, 'confirm')}
+              {step === 3 && availableSlots.length > 0 && (
+                <button onClick={handleConfirm} disabled={loading || !form.timeSlot}
+                  className="btn-primary flex-1 justify-center disabled:opacity-50">
+                  {loading ? <><Loader2 className="w-4 h-4 animate-spin" />{BOOKING_MSG[lang]}</> : <><CheckCircle className="w-4 h-4" />{t(lang, 'confirm')}</>}
                 </button>
               )}
             </div>
