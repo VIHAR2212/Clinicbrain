@@ -111,7 +111,7 @@ const CTA_LABELS = {
 
 const FEATURES_LABEL = { en: 'Everything You Need', hi: 'सब कुछ जो आपको चाहिए', mr: 'तुम्हाला हवे ते सर्व' }
 const BUILT_LABEL = { en: 'Built for real clinics', hi: 'वास्तविक क्लीनिकों के लिए बनाया गया', mr: 'खऱ्या क्लिनिकसाठी बनवले' }
-const BUILT_SUB = { en: 'Not a generic booking template. ClinicBrain is purpose-built for doctor\'s offices that need reliability.', hi: 'यह कोई सामान्य बुकिंग टेम्प्लेट नहीं है। क्लिनिकब्रेन डॉक्टर के क्लीनिक के लिए बनाया गया है।', mr: 'हे सामान्य बुकिंग टेम्प्लेट नाही. क्लिनिकब्रेन डॉक्टरांच्या कार्यालयांसाठी उद्देशाने बनवले आहे.' }
+const BUILT_SUB = { en: "Not a generic booking template. ClinicBrain is purpose-built for doctor's offices that need reliability.", hi: 'यह कोई सामान्य बुकिंग टेम्प्लेट नहीं है। क्लिनिकब्रेन डॉक्टर के क्लीनिक के लिए बनाया गया है।', mr: 'हे सामान्य बुकिंग टेम्प्लेट नाही. क्लिनिकब्रेन डॉक्टरांच्या कार्यालयांसाठी उद्देशाने बनवले आहे.' }
 const FLOW_LABEL = { en: 'The Flow', hi: 'कैसे काम करता है', mr: 'कसे कार्य करते' }
 const FLOW_SUB = { en: 'How booking works', hi: 'बुकिंग कैसे होती है', mr: 'बुकिंग कसे होते' }
 const HERO_BADGE = { en: 'TechBlitz26 · Team Parallax', hi: 'टेकब्लिट्ज़26 · टीम पैरेलैक्स', mr: 'टेकब्लिट्झ26 · टीम पॅरलॅक्स' }
@@ -124,8 +124,13 @@ export default function Home() {
 
   const handleBookingClose = (appointment) => {
     setBookingOpen(false)
+    // ✅ FIX: Show WhatsApp receipt with the real phone number from the booking
     if (appointment) setReceipt(appointment)
   }
+
+  // ✅ FIX: Pass onOpenBooking so Patient Demo opens booking form directly
+  const handleDemoClose = () => setDemoOpen(false)
+  const handleOpenBooking = () => setBookingOpen(true)
 
   const features = getFeatures(lang)
   const steps = getSteps(lang)
@@ -200,7 +205,10 @@ export default function Home() {
               <motion.div animate={{ y: [0, 8, 0] }} transition={{ repeat: Infinity, duration: 3.5, ease: 'easeInOut', delay: 1 }}
                 className="absolute -bottom-4 -right-4 z-10 card px-4 py-3">
                 <div className="chip chip-urgent text-[10px]">🚨 {lang === 'hi' ? 'आपातकाल' : lang === 'mr' ? 'तातडीचे' : 'URGENT'}</div>
-                <p className="text-xs text-slate mt-1">{lang === 'hi' ? 'छाती दर्द · डॉ. कपूर' : lang === 'mr' ? 'छातीदुखी · डॉ. कपूर' : 'Chest pain · Dr. Kapoor'}</p>
+                <p className="text-xs text-slate mt-1">
+                  {/* ✅ FIX: Translated doctor name in hero preview card */}
+                  {lang === 'hi' ? 'छाती दर्द · डॉ. कपूर' : lang === 'mr' ? 'छातीदुखी · डॉ. कपूर' : 'Chest pain · Dr. Kapoor'}
+                </p>
               </motion.div>
               <div className="card p-6 rounded-3xl">
                 <div className="flex items-center justify-between mb-5">
@@ -208,7 +216,10 @@ export default function Home() {
                     <p className="text-xs text-slate uppercase tracking-wider font-semibold">
                       {lang === 'hi' ? 'आज का शेड्यूल' : lang === 'mr' ? 'आजचे वेळापत्रक' : "Today's Schedule"}
                     </p>
-                    <p className="font-serif text-xl text-obsidian dark:text-ivory mt-0.5">Dr. Ananya Mehta</p>
+                    {/* ✅ FIX: Translated doctor name in hero card */}
+                    <p className="font-serif text-xl text-obsidian dark:text-ivory mt-0.5">
+                      {lang === 'hi' ? 'डॉ. अनन्या मेहता' : lang === 'mr' ? 'डॉ. अनन्या मेहता' : 'Dr. Ananya Mehta'}
+                    </p>
                   </div>
                   <div className="w-10 h-10 rounded-xl gradient-teal flex items-center justify-center">
                     <Activity className="w-5 h-5 text-white" />
@@ -217,9 +228,9 @@ export default function Home() {
                 <div className="space-y-2.5">
                   {[
                     { name: 'Priya Sharma', time: '09:30', chip: 'chip-confirmed', label: lang === 'hi' ? 'पुष्टि' : lang === 'mr' ? 'पुष्टी' : 'confirmed' },
-                    { name: 'Rahul Verma', time: '10:00', chip: 'chip-urgent', label: lang === 'hi' ? 'आपातकाल' : lang === 'mr' ? 'तातडीचे' : 'urgent' },
-                    { name: 'Sunita Patel', time: '10:30', chip: 'chip-pending', label: lang === 'hi' ? 'प्रतीक्षारत' : lang === 'mr' ? 'प्रलंबित' : 'pending' },
-                    { name: 'Amit Kumar', time: '11:00', chip: 'chip-confirmed', label: lang === 'hi' ? 'पुष्टि' : lang === 'mr' ? 'पुष्टी' : 'confirmed' },
+                    { name: 'Rahul Verma',  time: '10:00', chip: 'chip-urgent',    label: lang === 'hi' ? 'आपातकाल' : lang === 'mr' ? 'तातडीचे' : 'urgent' },
+                    { name: 'Sunita Patel', time: '10:30', chip: 'chip-pending',   label: lang === 'hi' ? 'प्रतीक्षारत' : lang === 'mr' ? 'प्रलंबित' : 'pending' },
+                    { name: 'Amit Kumar',   time: '11:00', chip: 'chip-confirmed', label: lang === 'hi' ? 'पुष्टि' : lang === 'mr' ? 'पुष्टी' : 'confirmed' },
                   ].map((appt, i) => (
                     <motion.div key={appt.name} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.4 + i * 0.08 }}
@@ -325,11 +336,20 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ── Modals ────────────────────────────────────────────────────── */}
       <AnimatePresence>
         {bookingOpen && <BookingForm key="booking" onClose={handleBookingClose} />}
-        {demoOpen && <DemoLogin key="demo" onClose={() => setDemoOpen(false)} />}
+        {demoOpen && (
+          <DemoLogin
+            key="demo"
+            onClose={handleDemoClose}
+            {/* ✅ FIX: Pass onOpenBooking so Patient Demo triggers booking form */}
+            onOpenBooking={handleOpenBooking}
+          />
+        )}
       </AnimatePresence>
 
+      {/* ✅ FIX: WhatsApp receipt uses real phone from booking form */}
       {receipt && (
         <WhatsAppReceipt
           appointment={receipt}
