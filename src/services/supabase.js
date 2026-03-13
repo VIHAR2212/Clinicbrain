@@ -93,6 +93,9 @@ export const DOCTORS_DATA = [
   },
 ]
 
+// ✅ Backward-compatibility alias — ReceptionDashboard & DoctorDashboard import { DOCTORS }
+export const DOCTORS = DOCTORS_DATA
+
 // Helper: get display name for current language
 export function getDoctorDisplayName(doctorName, lang = 'en') {
   const doc = DOCTORS_DATA.find(d => d.name === doctorName)
