@@ -6,25 +6,25 @@ import { useApp } from '../hooks/useApp'
 
 const DEMOS = {
   en: [
-    { role: 'patient', label: 'Patient Demo', icon: User, color: 'from-mint/20 to-teal/10', border: 'border-mint/40', iconColor: 'text-teal', desc: 'Book appointments, view confirmations, get WhatsApp updates', path: '/' },
+    { role: 'patient', label: 'Patient Demo', icon: User, color: 'from-mint/20 to-teal/10', border: 'border-mint/40', iconColor: 'text-teal', desc: 'Book appointments, view confirmations, get WhatsApp updates', path: '/#book' },
     { role: 'doctor', label: 'Doctor Demo', icon: Stethoscope, color: 'from-lavender/20 to-lavender/5', border: 'border-lavender/40', iconColor: 'text-lavender', desc: "View today's schedule, add notes, mark appointments complete", path: '/doctor' },
     { role: 'receptionist', label: 'Receptionist Demo', icon: ClipboardList, color: 'from-amber/20 to-amber/5', border: 'border-amber/40', iconColor: 'text-amber', desc: 'Full appointment management, search patients, analytics', path: '/receptionist' },
   ],
   hi: [
-    { role: 'patient', label: 'मरीज डेमो', icon: User, color: 'from-mint/20 to-teal/10', border: 'border-mint/40', iconColor: 'text-teal', desc: 'अपॉइंटमेंट बुक करें, पुष्टि देखें, व्हाट्सएप अपडेट पाएं', path: '/' },
+    { role: 'patient', label: 'मरीज डेमो', icon: User, color: 'from-mint/20 to-teal/10', border: 'border-mint/40', iconColor: 'text-teal', desc: 'अपॉइंटमेंट बुक करें, पुष्टि देखें, व्हाट्सएप अपडेट पाएं', path: '/#book' },
     { role: 'doctor', label: 'डॉक्टर डेमो', icon: Stethoscope, color: 'from-lavender/20 to-lavender/5', border: 'border-lavender/40', iconColor: 'text-lavender', desc: 'आज का शेड्यूल देखें, नोट्स जोड़ें, अपॉइंटमेंट पूर्ण करें', path: '/doctor' },
     { role: 'receptionist', label: 'रिसेप्शनिस्ट डेमो', icon: ClipboardList, color: 'from-amber/20 to-amber/5', border: 'border-amber/40', iconColor: 'text-amber', desc: 'पूर्ण अपॉइंटमेंट प्रबंधन, मरीज खोजें, एनालिटिक्स', path: '/receptionist' },
   ],
   mr: [
-    { role: 'patient', label: 'रुग्ण डेमो', icon: User, color: 'from-mint/20 to-teal/10', border: 'border-mint/40', iconColor: 'text-teal', desc: 'अपॉइंटमेंट बुक करा, पुष्टी पहा, व्हॉट्सॲप अपडेट मिळवा', path: '/' },
+    { role: 'patient', label: 'रुग्ण डेमो', icon: User, color: 'from-mint/20 to-teal/10', border: 'border-mint/40', iconColor: 'text-teal', desc: 'अपॉइंटमेंट बुक करा, पुष्टी पहा, व्हॉट्सॲप अपडेट मिळवा', path: '/#book' },
     { role: 'doctor', label: 'डॉक्टर डेमो', icon: Stethoscope, color: 'from-lavender/20 to-lavender/5', border: 'border-lavender/40', iconColor: 'text-lavender', desc: 'आजचे वेळापत्रक पहा, नोंदी जोडा, अपॉइंटमेंट पूर्ण करा', path: '/doctor' },
     { role: 'receptionist', label: 'रिसेप्शनिस्ट डेमो', icon: ClipboardList, color: 'from-amber/20 to-amber/5', border: 'border-amber/40', iconColor: 'text-amber', desc: 'संपूर्ण अपॉइंटमेंट व्यवस्थापन, रुग्ण शोधा, विश्लेषण', path: '/receptionist' },
   ],
 }
 
 const TITLES = { en: 'Quick Demo Access', hi: 'त्वरित डेमो प्रवेश', mr: 'त्वरित डेमो प्रवेश' }
-const SUBS = { en: 'Explore without signing up — for judges & visitors', hi: 'बिना साइन अप किए देखें — जजों और आगंतुकों के लिए', mr: 'साइन अप न करता एक्सप्लोर करा — परीक्षक आणि अभ्यागतांसाठी' }
-const FOOTERS = { en: 'Demo data is pre-loaded • No account required • Fully functional', hi: 'डेमो डेटा पहले से लोड है • कोई खाता नहीं चाहिए • पूरी तरह काम करता है', mr: 'डेमो डेटा आधीच लोड आहे • खाते आवश्यक नाही • पूर्णपणे कार्यशील' }
+const SUBS = { en: 'Explore without signing up — for judges & visitors', hi: 'बिना साइन अप किए देखें — जजों और आगंतुकों के लिए', mr: 'साइन अप न करता एक्सप्लोर करा' }
+const FOOTERS = { en: 'Demo data is pre-loaded • No account required • Fully functional', hi: 'डेमो डेटा पहले से लोड है • कोई खाता नहीं चाहिए', mr: 'डेमो डेटा आधीच लोड आहे • खाते आवश्यक नाही' }
 
 export default function DemoLogin({ onClose }) {
   const { activateDemo, lang } = useApp()
@@ -37,8 +37,13 @@ export default function DemoLogin({ onClose }) {
     setSelected(demo.role)
     setTimeout(() => {
       activateDemo(demo.role)
-      navigate(demo.path)
-      onClose?.()
+      // Patient stays on home, others go to their dashboard
+      if (demo.role === 'patient') {
+        onClose?.() // just close the modal, stay on home page
+      } else {
+        navigate(demo.path)
+        onClose?.()
+      }
     }, 400)
   }
 

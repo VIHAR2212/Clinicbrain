@@ -11,6 +11,7 @@ import BookingForm from '../components/BookingForm'
 import DemoLogin from '../components/DemoLogin'
 import Chatbot from '../components/Chatbot'
 import QuotesBanner from '../components/QuotesBanner'
+import WhatsAppReceipt from '../components/WhatsAppReceipt'
 
 function getFeatures(lang) {
   const features = {
@@ -119,6 +120,12 @@ export default function Home() {
   const { lang } = useApp()
   const [bookingOpen, setBookingOpen] = useState(false)
   const [demoOpen, setDemoOpen] = useState(false)
+  const [receipt, setReceipt] = useState(null)
+
+  const handleBookingClose = (appointment) => {
+    setBookingOpen(false)
+    if (appointment) setReceipt(appointment)
+  }
 
   const features = getFeatures(lang)
   const steps = getSteps(lang)
@@ -319,9 +326,17 @@ export default function Home() {
       </section>
 
       <AnimatePresence>
-        {bookingOpen && <BookingForm key="booking" onClose={() => setBookingOpen(false)} />}
+        {bookingOpen && <BookingForm key="booking" onClose={handleBookingClose} />}
         {demoOpen && <DemoLogin key="demo" onClose={() => setDemoOpen(false)} />}
       </AnimatePresence>
+
+      {receipt && (
+        <WhatsAppReceipt
+          appointment={receipt}
+          lang={lang}
+          onClose={() => setReceipt(null)}
+        />
+      )}
 
       <Chatbot onOpenBooking={() => setBookingOpen(true)} />
     </div>

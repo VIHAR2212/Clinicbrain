@@ -321,7 +321,7 @@ export default function BookingForm({ onClose }) {
                   ))}
                 </div>
                 <p className="text-xs text-slate mb-4">{REALTIME_MSG[lang] || REALTIME_MSG.en}</p>
-                <button onClick={onClose} className="btn-primary w-full justify-center">
+                <button onClick={() => onClose(confirmation)} className="btn-primary w-full justify-center">
                   {DONE_LABEL[lang] || DONE_LABEL.en}
                 </button>
               </motion.div>
