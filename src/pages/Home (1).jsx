@@ -343,7 +343,6 @@ export default function Home() {
           <DemoLogin
             key="demo"
             onClose={handleDemoClose}
-            {/* ✅ FIX: Pass onOpenBooking so Patient Demo triggers booking form */}
             onOpenBooking={handleOpenBooking}
           />
         )}
