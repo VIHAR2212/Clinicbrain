@@ -25,6 +25,14 @@ const DAILY_DATA = [
   { date: 'Mar 13', count: 21 },
 ]
 
+// Sort appointments by date, then by time_slot ascending
+function sortByTime(appts) {
+  return [...appts].sort((a, b) => {
+    if (a.date !== b.date) return a.date.localeCompare(b.date)
+    return a.time_slot.localeCompare(b.time_slot)
+  })
+}
+
 function StatusChip({ status, urgent }) {
   if (urgent) return <span className="chip chip-urgent text-[10px]">🚨 Urgent</span>
   if (status === 'confirmed') return <span className="chip chip-confirmed text-[10px]">Confirmed</span>
@@ -51,10 +59,10 @@ export default function ReceptionDashboard() {
   const [rescheduleId, setRescheduleId] = useState(null)
   const [newTime, setNewTime] = useState('')
 
-  // Subscribe to global store
+  // Always keep list sorted by time via subscribe
   useEffect(() => {
-    setAppointments(getAppointments())
-    const unsub = subscribe((appts) => setAppointments(appts))
+    setAppointments(sortByTime(getAppointments()))
+    const unsub = subscribe((appts) => setAppointments(sortByTime(appts)))
     return unsub
   }, [])
 
@@ -71,6 +79,7 @@ export default function ReceptionDashboard() {
   const doReschedule = (id) => {
     if (!newTime) return
     updateAppointment(id, { time_slot: newTime, status: 'confirmed' })
+    // List auto re-sorts via subscribe -> sortByTime
     setRescheduleId(null)
     setNewTime('')
   }
@@ -152,7 +161,6 @@ export default function ReceptionDashboard() {
 
       {/* Main */}
       <div className="flex-1 overflow-hidden flex flex-col">
-        {/* Top bar */}
         <div className="px-4 py-3 border-b border-mist/60 dark:border-slate/20 flex items-center gap-3 bg-white dark:bg-obsidian/80">
           <button onClick={() => setSideOpen(o => !o)} className="btn-ghost w-8 h-8 p-0 justify-center">
             <Menu className="w-4 h-4" />
@@ -175,7 +183,7 @@ export default function ReceptionDashboard() {
         <div className="flex-1 overflow-y-auto p-4">
           <AnimatePresence mode="wait">
 
-            {/* ── Appointments Tab ── */}
+            {/* Appointments Tab */}
             {tab === 'appointments' && (
               <motion.div key="appts" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                 <div className="flex flex-wrap gap-3 mb-4">
@@ -204,14 +212,16 @@ export default function ReceptionDashboard() {
                       <table className="w-full text-sm">
                         <thead>
                           <tr className="border-b border-mist/60 dark:border-slate/20 bg-mist/30 dark:bg-slate/10">
-                            {['Patient', 'Doctor', 'Date', 'Time', 'Status', 'Source', 'Actions'].map(h => (
+                            {['Patient', 'Doctor', 'Date', 'Time ↑', 'Status', 'Source', 'Actions'].map(h => (
                               <th key={h} className="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate font-semibold">{h}</th>
                             ))}
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-mist/40 dark:divide-slate/10">
                           {filtered.map(appt => (
-                            <motion.tr key={appt.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                            <motion.tr key={appt.id}
+                              layout
+                              initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                               className={`hover:bg-mist/30 dark:hover:bg-slate/5 transition-colors ${appt.urgent ? 'bg-coral/5' : ''}`}>
                               <td className="px-4 py-3">
                                 <div className="flex items-center gap-2.5">
@@ -243,9 +253,7 @@ export default function ReceptionDashboard() {
                                   <span className="font-mono text-xs text-obsidian dark:text-ivory">{appt.time_slot}</span>
                                 )}
                               </td>
-                              <td className="px-4 py-3">
-                                <StatusChip status={appt.status} urgent={appt.urgent} />
-                              </td>
+                              <td className="px-4 py-3"><StatusChip status={appt.status} urgent={appt.urgent} /></td>
                               <td className="px-4 py-3">
                                 <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium capitalize
                                   ${appt.source === 'whatsapp' ? 'bg-mint/20 text-deep-teal' :
@@ -285,7 +293,7 @@ export default function ReceptionDashboard() {
               </motion.div>
             )}
 
-            {/* ── Analytics Tab ── */}
+            {/* Analytics Tab */}
             {tab === 'analytics' && (
               <motion.div key="analytics" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-6">
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -336,7 +344,7 @@ export default function ReceptionDashboard() {
               </motion.div>
             )}
 
-            {/* ── Walk-in Tab ── */}
+            {/* Walk-in Tab */}
             {tab === 'walkin' && (
               <motion.div key="walkin" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="max-w-md">
                 <div className="card p-6">
@@ -361,7 +369,7 @@ export default function ReceptionDashboard() {
                     <div>
                       <label className="block text-xs font-semibold text-slate uppercase tracking-wider mb-1.5">Doctor</label>
                       <select className="input" value={walkin.doctor} onChange={e => setWalkin(w => ({ ...w, doctor: e.target.value }))}>
-                        {DOCTORS.map(d => <option key={d.name} value={d.name}>{d.name} — {d.specialty}</option>)}
+                        {DOCTORS.map(d => <option key={d.name} value={d.name}>{d.name} — {d.specialty?.en || d.specialty}</option>)}
                       </select>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
