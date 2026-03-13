@@ -31,28 +31,6 @@
 
 ---
 
-## 📦 Local Setup
-
-```bash
-# 1. Clone the repo
-git clone https://github.com/YOUR_USERNAME/clinicbrain.git
-cd clinicbrain
-
-# 2. Install dependencies
-npm install
-
-# 3. Configure environment
-cp .env.example .env
-# Edit .env with your Supabase credentials
-
-# 4. Run locally
-npm run dev
-```
-
-Open http://localhost:5173
-
----
-
 ## 🗄 Supabase Setup
 
 1. Create a free project at [supabase.com](https://supabase.com)
