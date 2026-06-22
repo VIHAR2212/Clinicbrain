@@ -1,4 +1,4 @@
-# ClinicBrain 🏥
+# 🏥 ClinicBrain 
 ### Smart Doctor Appointment & Clinic Management System
 **TechBlitz26 · Team Parallax**
 
